@@ -1,6 +1,6 @@
 package com.taobao.arthas.core.command.monitor200;
 
-import com.taobao.arthas.core.advisor.ReflectAdviceListenerAdapter;
+import com.taobao.arthas.core.advisor.AdviceListenerAdapter;
 import com.taobao.arthas.core.shell.command.CommandProcess;
 import com.alibaba.arthas.deps.org.slf4j.Logger;
 import com.alibaba.arthas.deps.org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import com.taobao.arthas.core.util.ThreadUtil;
 /**
  * @author beiwei30 on 29/11/2016.
  */
-public class StackAdviceListener extends ReflectAdviceListenerAdapter {
+public class StackAdviceListener extends AdviceListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(StackAdviceListener.class);
 
     private final ThreadLocal<String> stackThreadLocal = new ThreadLocal<String>();
@@ -22,9 +22,10 @@ public class StackAdviceListener extends ReflectAdviceListenerAdapter {
     private StackCommand command;
     private CommandProcess process;
 
-    public StackAdviceListener(StackCommand command, CommandProcess process) {
+    public StackAdviceListener(StackCommand command, CommandProcess process, boolean verbose) {
         this.command = command;
         this.process = process;
+        super.setVerbose(verbose);
     }
 
     @Override
@@ -53,7 +54,11 @@ public class StackAdviceListener extends ReflectAdviceListenerAdapter {
         // 本次调用的耗时
         try {
             double cost = threadLocalWatch.costInMillis();
-            if (isConditionMet(command.getConditionExpress(), advice, cost)) {
+            boolean conditionResult = isConditionMet(command.getConditionExpress(), advice, cost);
+            if (this.isVerbose()) {
+                process.write("Condition express: " + command.getConditionExpress() + " , result: " + conditionResult + "\n");
+            }
+            if (conditionResult) {
                 // TODO: concurrency issues for process.write
                 process.write("ts=" + DateUtils.getCurrentDate() + ";" + stackThreadLocal.get() + "\n");
                 process.times().incrementAndGet();
@@ -61,7 +66,7 @@ public class StackAdviceListener extends ReflectAdviceListenerAdapter {
                     abortProcess(process, command.getNumberOfLimit());
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.warn("stack failed.", e);
             process.write("stack failed, condition is: " + command.getConditionExpress() + ", " + e.getMessage()
                           + ", visit " + LogUtil.loggingFile() + " for more details.\n");

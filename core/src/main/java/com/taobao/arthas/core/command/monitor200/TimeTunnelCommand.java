@@ -2,6 +2,7 @@ package com.taobao.arthas.core.command.monitor200;
 
 import com.alibaba.arthas.deps.org.slf4j.Logger;
 import com.alibaba.arthas.deps.org.slf4j.LoggerFactory;
+import com.taobao.arthas.core.GlobalOptions;
 import com.taobao.arthas.core.advisor.Advice;
 import com.taobao.arthas.core.advisor.AdviceListener;
 import com.taobao.arthas.core.advisor.ArthasMethod;
@@ -52,6 +53,7 @@ import static java.lang.String.format;
         Constants.WIKI + Constants.WIKI_HOME + "tt")
 public class TimeTunnelCommand extends EnhancerCommand {
     // 时间隧道(时间碎片的集合)
+    // TODO 并非线程安全？
     private static final Map<Integer, TimeFragment> timeFragmentMap = new LinkedHashMap<Integer, TimeFragment>();
     // 时间碎片序列生成器
     private static final AtomicInteger sequence = new AtomicInteger(1000);
@@ -312,7 +314,7 @@ public class TimeTunnelCommand extends EnhancerCommand {
 
     @Override
     protected AdviceListener getAdviceListener(CommandProcess process) {
-        return new TimeTunnelAdviceListener(this, process);
+        return new TimeTunnelAdviceListener(this, process, GlobalOptions.verbose || this.verbose);
     }
 
     // 展示指定记录

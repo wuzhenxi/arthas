@@ -1,7 +1,9 @@
 package com.taobao.arthas.core.util;
 
+import com.taobao.arthas.core.command.model.BlockingLockInfo;
 import com.taobao.arthas.core.view.Ansi;
 
+import java.arthas.SpyAPI;
 import java.lang.management.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -220,9 +222,9 @@ abstract public class ThreadUtil {
         }
 
         BlockingLockInfo blockingLockInfo = new BlockingLockInfo();
-        blockingLockInfo.threadInfo = ownerThreadPerLock.get(mostBlockingLock);
-        blockingLockInfo.lockIdentityHashCode = mostBlockingLock;
-        blockingLockInfo.blockingThreadCount = blockCountPerLock.get(mostBlockingLock);
+        blockingLockInfo.setThreadInfo(ownerThreadPerLock.get(mostBlockingLock));
+        blockingLockInfo.setLockIdentityHashCode(mostBlockingLock);
+        blockingLockInfo.setBlockingThreadCount(blockCountPerLock.get(mostBlockingLock));
         return blockingLockInfo;
     }
 
@@ -233,8 +235,8 @@ abstract public class ThreadUtil {
 
 
     public static String getFullStacktrace(BlockingLockInfo blockingLockInfo) {
-        return getFullStacktrace(blockingLockInfo.threadInfo, -1, blockingLockInfo.lockIdentityHashCode,
-                blockingLockInfo.blockingThreadCount);
+        return getFullStacktrace(blockingLockInfo.getThreadInfo(), -1, blockingLockInfo.getLockIdentityHashCode(),
+                blockingLockInfo.getBlockingThreadCount());
     }
 
 
@@ -328,17 +330,35 @@ abstract public class ThreadUtil {
         return sb.toString().replace("\t", "    ");
     }
 
-    public static class BlockingLockInfo {
+    /**
+     * </pre>
+     * java.lang.Thread.getStackTrace(Thread.java:1559),
+     * com.taobao.arthas.core.util.ThreadUtil.getThreadStack(ThreadUtil.java:349),
+     * com.taobao.arthas.core.command.monitor200.StackAdviceListener.before(StackAdviceListener.java:33),
+     * com.taobao.arthas.core.advisor.AdviceListenerAdapter.before(AdviceListenerAdapter.java:49),
+     * com.taobao.arthas.core.advisor.SpyImpl.atEnter(SpyImpl.java:42),
+     * java.arthas.SpyAPI.atEnter(SpyAPI.java:40),
+     * demo.MathGame.print(MathGame.java), demo.MathGame.run(MathGame.java:25),
+     * demo.MathGame.main(MathGame.java:16)
+     * </pre>
+     */
+    private static int MAGIC_STACK_DEPTH = 0;
 
-        // the thread info that is holing this lock.
-        public ThreadInfo threadInfo = null;
-        // the associated LockInfo object
-        public int lockIdentityHashCode = 0;
-        // the number of thread that is blocked on this lock
-        public int blockingThreadCount = 0;
-
+    private static int findTheSpyAPIDepth(StackTraceElement[] stackTraceElementArray) {
+        if (MAGIC_STACK_DEPTH > 0) {
+            return MAGIC_STACK_DEPTH;
+        }
+        if (MAGIC_STACK_DEPTH > stackTraceElementArray.length) {
+            return 0;
+        }
+        for (int i = 0; i < stackTraceElementArray.length; ++i) {
+            if (SpyAPI.class.getName().equals(stackTraceElementArray[i].getClassName())) {
+                MAGIC_STACK_DEPTH = i + 1;
+                break;
+            }
+        }
+        return MAGIC_STACK_DEPTH;
     }
-
 
     /**
      * 获取方法执行堆栈信息
@@ -347,15 +367,16 @@ abstract public class ThreadUtil {
      */
     public static String getThreadStack(Thread currentThread) {
         StackTraceElement[] stackTraceElementArray = currentThread.getStackTrace();
+        int magicStackDepth = findTheSpyAPIDepth(stackTraceElementArray);
 
-        StackTraceElement locationStackTraceElement = stackTraceElementArray[10];
+        StackTraceElement locationStackTraceElement = stackTraceElementArray[magicStackDepth];
         String locationString = String.format("    @%s.%s()", locationStackTraceElement.getClassName(),
                 locationStackTraceElement.getMethodName());
 
         StringBuilder builder = new StringBuilder();
         builder.append(getThreadTitle(currentThread)).append("\n").append(locationString).append("\n");
 
-        int skip = 11;
+        int skip = magicStackDepth + 1;
         for (int index = skip; index < stackTraceElementArray.length; index++) {
             StackTraceElement ste = stackTraceElementArray[index];
             builder.append("        at ")
