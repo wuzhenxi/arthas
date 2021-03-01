@@ -1,8 +1,12 @@
 package com.taobao.arthas.core.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -449,10 +453,14 @@ public abstract class StringUtils {
 
     public static String replace(String inString, String oldPattern, String newPattern) {
         if(hasLength(inString) && hasLength(oldPattern) && newPattern != null) {
-            StringBuilder sb = new StringBuilder();
             int pos = 0;
             int index = inString.indexOf(oldPattern);
+            if (index < 0) {
+                //no need to replace
+                return inString;
+            }
 
+            StringBuilder sb = new StringBuilder();
             for(int patLen = oldPattern.length(); index >= 0; index = inString.indexOf(oldPattern, pos)) {
                 sb.append(inString.substring(pos, index));
                 sb.append(newPattern);
@@ -880,5 +888,28 @@ public abstract class StringUtils {
                 : bytes < 0xfffccccccccccccL >> 10 ? String.format("%.1f TiB", bytes / 0x1p40)
                 : bytes < 0xfffccccccccccccL ? String.format("%.1f PiB", (bytes >> 10) / 0x1p40)
                 : String.format("%.1f EiB", (bytes >> 20) / 0x1p40);
+    }
+
+    public static List<String> toLines(String text) {
+        List<String> result = new ArrayList<String>();
+        BufferedReader reader = new BufferedReader(new StringReader(text));
+        try {
+            String line = reader.readLine();
+            while (line != null) {
+                result.add(line);
+                line = reader.readLine();
+            }
+        } catch (IOException exc) {
+            // quit
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+        return result;
     }
 }

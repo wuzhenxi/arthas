@@ -16,7 +16,13 @@ public class GetStaticView extends ResultView<GetStaticModel> {
 
     @Override
     public void draw(CommandProcess process, GetStaticModel result) {
-        int expand = result.expand();
+        if (result.getMatchedClassLoaders() != null) {
+            process.write("Matched classloaders: \n");
+            ClassLoaderView.drawClassLoaders(process, result.getMatchedClassLoaders(), false);
+            process.write("\n");
+            return;
+        }
+        int expand = result.getExpand();
         if (result.getField() != null) {
             ObjectVO field = result.getField();
             String valueStr = StringUtils.objectToString(expand >= 0 ? new ObjectView(field.getValue(), expand).draw() : field.getValue());

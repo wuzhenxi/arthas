@@ -8,6 +8,7 @@ Advanced Usage
 * [cat](cat.md) - Concatenate and print files
 * [echo](echo.md) - write arguments to the standard output
 * [grep](grep.md) - Pattern searcher
+* [base64](base64.md) - Encode and decode using Base64 representation.
 * [tee](tee.md) - Copies standard input to standard output, making a copy in zero or more files.
 * [pwd](pwd.md) - Return working directory name
 * session - display current session information
@@ -29,7 +30,7 @@ Advanced Usage
 * [perfcounter](perfcounter.md) - show JVM Perf Counter information
 * [logger](logger.md) - print the logger information, update the logger level
 * [getstatic](getstatic.md) - examine class's static properties
-* [ognl](ognl.md) - execute ongl expression
+* [ognl](ognl.md) - execute ognl expression
 * [mbean](mbean.md) - show Mbean information
 * [heapdump](heapdump.md) - dump java heap in hprof binary format, like `jmap`
 
@@ -39,6 +40,7 @@ Advanced Usage
 * [sm](sm.md) - check methods info for the loaded classes
 * [jad](jad.md) - decompile the specified loaded classes
 * [mc](mc.md) - Memory compiler, compiles `.java` files into `.class` files in memory
+* [retransform](retransform.md) - load external `*.class` files and retransform it into JVM
 * [redefine](redefine.md) - load external `*.class` files and re-define it into JVM
 * [dump](dump.md) - dump the loaded classes in byte code to the specified location
 * [classloader](classloader.md) - check the inheritance structure, urls, class loading info for the specified class; using classloader to get the url of the resource e.g. `java/lang/String.class`
@@ -70,7 +72,7 @@ Arthas provides `pipe` to process the result returned from commands further, e.g
 * plaintext - remove the ANSI color
 * wc - count lines
 
-## async in background
+## async jobs
 
 [async](async.md) can be handy when a problem is hardly to reproduce in the production environment, e.g. one `watch` condition may happen only once in one single day.
 
@@ -85,6 +87,10 @@ Arthas provides `pipe` to process the result returned from commands further, e.g
 Arthas supports living inside a browser. The communication between arthas and browser is via websocket.
 
 * [Web Console](web-console.md)
+
+## Arthas Properties
+
+* [Arthas Properties](arthas-properties.md)
 
 ## Start as a Java Agent
 
@@ -130,8 +136,8 @@ Escape character is '^]'.
 `--' `--'`--' '--'   `--'   `--'  `--'`--' `--'`-----'
 
 
-wiki      https://alibaba.github.io/arthas
-tutorials https://alibaba.github.io/arthas/arthas-tutorials
+wiki      https://arthas.aliyun.com/doc
+tutorials https://arthas.aliyun.com/doc/arthas-tutorials.html
 version   3.3.6
 pid       58883
 ```

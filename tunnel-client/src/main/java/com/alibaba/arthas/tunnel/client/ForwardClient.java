@@ -8,6 +8,8 @@ import javax.net.ssl.SSLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.taobao.arthas.common.ArthasConstants;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -38,11 +40,9 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 public class ForwardClient {
     private final static Logger logger = LoggerFactory.getLogger(ForwardClient.class);
     private URI tunnelServerURI;
-    private URI localServerURI;
 
-    public ForwardClient(URI tunnelServerURI, URI localServerURI) {
+    public ForwardClient(URI tunnelServerURI) {
         this.tunnelServerURI = tunnelServerURI;
-        this.localServerURI = localServerURI;
     }
 
     public void start() throws URISyntaxException, SSLException, InterruptedException {
@@ -79,8 +79,7 @@ public class ForwardClient {
                 WebSocketVersion.V13, null, true, new DefaultHttpHeaders());
         final WebSocketClientProtocolHandler websocketClientHandler = new WebSocketClientProtocolHandler(newHandshaker);
 
-        final ForwardClientSocketClientHandler forwardClientSocketClientHandler = new ForwardClientSocketClientHandler(
-                localServerURI);
+        final ForwardClientSocketClientHandler forwardClientSocketClientHandler = new ForwardClientSocketClientHandler();
 
         final EventLoopGroup group = new NioEventLoopGroup(1, new DefaultThreadFactory("arthas-ForwardClient", true));
         ChannelFuture closeFuture = null;
@@ -94,7 +93,7 @@ public class ForwardClient {
                     if (sslCtx != null) {
                         p.addLast(sslCtx.newHandler(ch.alloc(), host, port));
                     }
-                    p.addLast(new HttpClientCodec(), new HttpObjectAggregator(8192), websocketClientHandler,
+                    p.addLast(new HttpClientCodec(), new HttpObjectAggregator(ArthasConstants.MAX_HTTP_CONTENT_LENGTH), websocketClientHandler,
                             forwardClientSocketClientHandler);
                 }
             });

@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.alibaba.arthas.deps.org.objectweb.asm.Type;
+import com.alibaba.deps.org.objectweb.asm.Type;
 import com.taobao.arthas.core.command.model.ClassDetailVO;
 import com.taobao.arthas.core.command.model.ClassLoaderVO;
 import com.taobao.arthas.core.command.model.ClassVO;
@@ -197,6 +197,14 @@ public class ClassUtils {
         ClassLoader parent = classLoader == null ? null : classLoader.getParent();
         classLoaderVO.setParent(parent==null?null:parent.toString());
         return classLoaderVO;
+    }
+
+    public static List<ClassLoaderVO> createClassLoaderVOList(Collection<ClassLoader> classLoaders) {
+        List<ClassLoaderVO> classLoaderVOList = new ArrayList<ClassLoaderVO>();
+        for (ClassLoader classLoader : classLoaders) {
+            classLoaderVOList.add(createClassLoaderVO(classLoader));
+        }
+        return classLoaderVOList;
     }
 
     public static String classLoaderHash(Class<?> clazz) {
